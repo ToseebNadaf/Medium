@@ -1,5 +1,5 @@
 {
-  "name": "common-app",
+  "name": "zod_validation_pack",
   "version": "1.0.0",
   "description": "",
   "main": "dist/index.js",
