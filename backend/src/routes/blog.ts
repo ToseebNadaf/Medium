@@ -63,10 +63,97 @@ blogRouter.post("/", async (c) => {
   }
 });
 
-blogRouter.get("/blog", (c) => {
-  return c.text("Created blogs");
+blogRouter.put("/", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  const body = await c.req.json();
+  try {
+    const blog = await prisma.post.update({
+      where: {
+        id: body.id,
+      },
+      data: {
+        title: body.title,
+        content: body.content,
+      },
+    });
+
+    return c.json({
+      message: "Blog updated successfully.",
+      id: blog.id,
+    });
+  } catch (error) {
+    c.status(500);
+    return c.json({
+      message: "An unexpected error occurred. Please try again.",
+    });
+  }
 });
 
-blogRouter.put("/blog", (c) => {
-  return c.text("update blog");
+blogRouter.get("/bulk", async (c) => {
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  try {
+    const blogs = await prisma.post.findMany({
+      select: {
+        content: true,
+        title: true,
+        id: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    return c.json({
+      message: "Blogs retrieved successfully.",
+      blogs,
+    });
+  } catch (error) {
+    c.status(500);
+    return c.json({
+      message: "An unexpected error occurred while fetching blogs.",
+    });
+  }
+});
+
+blogRouter.get("/:id", async (c) => {
+  const id = c.req.param("id");
+  const prisma = new PrismaClient({
+    datasourceUrl: c.env.DATABASE_URL,
+  }).$extends(withAccelerate());
+
+  try {
+    const blog = await prisma.post.findFirst({
+      where: {
+        id: Number(id),
+      },
+      select: {
+        id: true,
+        title: true,
+        content: true,
+        author: {
+          select: {
+            name: true,
+          },
+        },
+      },
+    });
+
+    return c.json({
+      message: "Blog retrieved successfully.",
+      blog,
+    });
+  } catch (error) {
+    c.status(500);
+    return c.json({
+      message: "An unexpected error occurred while fetching the blog.",
+    });
+  }
 });

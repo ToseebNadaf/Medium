@@ -12,7 +12,7 @@ export const userRouter = new Hono<{
 
 userRouter.post("/signup", async (c) => {
   const prisma = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
+    datasourceUrl: c.env?.DATABASE_URL,
   }).$extends(withAccelerate());
 
   const body = await c.req.json();
@@ -25,22 +25,22 @@ userRouter.post("/signup", async (c) => {
       },
     });
 
-    const jwt = sign({ id: user.id }, c.env.JWT_SECRET);
+    const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
+
     return c.json({
-      message: "User created successfully.",
+      message: "User signed up successfully.",
       jwt,
     });
   } catch (error) {
-    c.status(500);
     return c.json({
-      message: "An unexpected error occurred.",
+      message: "An unexpected error occurred during signup. Please try again.",
     });
   }
 });
 
 userRouter.post("/signin", async (c) => {
   const prisma = new PrismaClient({
-    datasourceUrl: c.env.DATABASE_URL,
+    datasourceUrl: c.env?.DATABASE_URL,
   }).$extends(withAccelerate());
 
   const body = await c.req.json();
@@ -53,21 +53,20 @@ userRouter.post("/signin", async (c) => {
     });
 
     if (!user) {
-      c.status(404);
       return c.json({
-        message: "User not found. Please sign up.",
+        message: "User not found.",
       });
     }
 
-    const jwt = sign({ id: user.id }, c.env.JWT_SECRET);
+    const jwt = await sign({ id: user.id }, c.env.JWT_SECRET);
+
     return c.json({
-      message: "Signed in successfully.",
+      message: "Login successful.",
       jwt,
     });
   } catch (error) {
-    c.status(500);
     return c.json({
-      message: "An unexpected error occurred.",
+      message: "An unexpected error occurred. Please try again later.",
     });
   }
 });
